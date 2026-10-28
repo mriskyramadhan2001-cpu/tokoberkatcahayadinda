@@ -337,7 +337,6 @@ class MainActivity : AppCompatActivity() {
             try {
                 val bt = bluetoothAdapter() ?: throw IOException("Bluetooth tidak tersedia")
                 val device = bt.getRemoteDevice(addr)
-                bt.cancelDiscovery()
                 socket = connectSocket(device)
 
                 // ISO_8859_1: tiap karakter = 1 byte, jadi kode ESC/POS (\x1B, \x1D, \x00) utuh
