@@ -338,19 +338,22 @@ class MainActivity : AppCompatActivity() {
                 val bt = bluetoothAdapter() ?: throw IOException("Bluetooth tidak tersedia")
                 val device = bt.getRemoteDevice(addr)
                 socket = connectSocket(device)
+                Thread.sleep(700) // printer murah butuh jeda setelah tersambung sebelum menerima data
 
-                // ISO_8859_1: tiap karakter = 1 byte, jadi kode ESC/POS (\x1B, \x1D, \x00) utuh
-                val data = text.toByteArray(Charsets.ISO_8859_1)
+                // Reset printer + tambah baris kosong di akhir supaya buffer pasti tercetak semua
+                val isi = if (text.startsWith("\u001B@")) text else "\u001B@\n$text"
+                val data = (isi + "\n\n\n").toByteArray(Charsets.ISO_8859_1)
                 val out = socket.outputStream
                 var i = 0
                 while (i < data.size) {
-                    val n = minOf(512, data.size - i)
+                    val n = minOf(256, data.size - i)
                     out.write(data, i, n)
                     out.flush()
                     i += n
-                    Thread.sleep(30) // beri napas supaya buffer printer murah tidak penuh
+                    Thread.sleep(50) // beri napas supaya buffer printer murah tidak penuh
                 }
-                Thread.sleep(1000) // tunggu data habis tercetak sebelum koneksi ditutup
+                Thread.sleep(2000) // tunggu data habis tercetak sebelum koneksi ditutup
+                toast("Terkirim ${data.size} byte ke printer")
             } catch (e: Exception) {
                 runOnUiThread {
                     AlertDialog.Builder(this)
